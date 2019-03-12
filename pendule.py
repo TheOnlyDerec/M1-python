@@ -272,10 +272,25 @@ class doublePendule(object):
             res = H.dot(Vect)
             return res[:3]
 
-    def getJac(self, q=None):
-        """Get the Jacobian"""
-        q = self.q if q is None else q
-        return self.l * np.array([[-cos(q[0, 0]), -sin(q[0, 0]), 0]]).T
+    def drawPyGame(self, screen, color=(255, 255, 255), scale=1., offset=np.zeros((2,), dtype=np.int_)):
+        """Draw a simple pendulum, radius corresponds to the (squareroot of the) mass"""
+        # Unfortunately,origin is top left in pygame -> up is down down is up
+        xEnd1 = (self.MGD(np.array([0,self.l[0],1]),2).squeeze()[:2] * scale).astype(np.int_)
+        xEnd2 = (self.MGD(np.array([0,self.l[1],0]),2).squeeze()[:2] * scale).astype(np.int_)
+        xEnd1 += offset  # Only take x-y, adjust for offset
+        xEnd2 += offset  # Only take x-y, adjust for offset
+        xEnd1[1] *= -1
+        xEnd2[1] *= -1
+        r1 = int((self.m[0] * scale) ** 0.5) + 1
+        r2 = int((self.m[1] * scale) ** 0.5) + 1
+        width = int(scale ** 0.25 + 1)
+        pygDraw.line(screen, color, offset, xEnd1, width)
+        pygDraw.line(screen, color, xEnd1, xEnd2, width)
+        pygDraw.circle(screen, color, xEnd1, r1)
+        pygDraw.circle(screen, color, xEnd2, r2)
+
+
+        return None
 
 
 
@@ -308,5 +323,10 @@ if __name__ == "__main__":
     # simulationControlPID(myPend, Q0, QTarget, Kpd, Ki)
 
 
-    dp = doublePendule(1, 1, 2, 4, 0, 0, np.array([np.pi/2,0]))
-    print(dp.MGD(np.array([0,dp.l[0],0]),1))
+    dp = doublePendule(1, 1, 2, 4, 0, 0, np.array([np.pi/2,np.pi/2]))
+    print(dp.MGD(np.array([0,dp.l[1],0]),2))
+    screen = pygame.display.set_mode((600, 600))
+    while True:
+        screen.fill((255, 255, 255))  # Make screen white again -> otherwise all are displayed
+        dp.drawPyGame(screen,color=(0,0,0), offset=(300,300), scale=150)
+        pygame.display.flip()
